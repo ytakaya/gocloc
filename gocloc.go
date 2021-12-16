@@ -8,10 +8,9 @@ type Processor struct {
 
 // Result defined processing result.
 type Result struct {
-	Total         *Language
-	Files         map[string]*ClocFile
-	Languages     map[string]*Language
-	MaxPathLength int
+	Total     *Language
+	Files     map[string]*ClocFile
+	Languages map[string]*Language
 }
 
 // NewProcessor returns Processor.
@@ -24,21 +23,14 @@ func NewProcessor(langs *DefinedLanguages, options *ClocOptions) *Processor {
 
 // Analyze executes gocloc parsing for the directory of the paths argument and returns the result.
 func (p *Processor) Analyze(paths []string) (*Result, error) {
-	total := NewLanguage("TOTAL", []string{}, [][]string{{"", ""}})
+	total := NewLanguage("TOTAL", []string{})
 	languages, err := getAllFiles(paths, p.langs, p.opts)
 	if err != nil {
 		return nil, err
 	}
-	maxPathLen := 0
 	num := 0
 	for _, lang := range languages {
 		num += len(lang.Files)
-		for _, file := range lang.Files {
-			l := len(file)
-			if maxPathLen < l {
-				maxPathLen = l
-			}
-		}
 	}
 	clocFiles := make(map[string]*ClocFile, num)
 
@@ -65,9 +57,8 @@ func (p *Processor) Analyze(paths []string) (*Result, error) {
 	}
 
 	return &Result{
-		Total:         total,
-		Files:         clocFiles,
-		Languages:     languages,
-		MaxPathLength: maxPathLen,
+		Total:     total,
+		Files:     clocFiles,
+		Languages: languages,
 	}, nil
 }

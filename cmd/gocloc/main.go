@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"sort"
 
 	flags "github.com/jessevdk/go-flags"
 	"github.com/ytakaya/gocloc"
@@ -60,17 +59,7 @@ func (o *outputBuilder) WriteResult() {
 	// write header
 	o.WriteHeader()
 
-	clocLangs := o.result.Languages
-
-	var sortedLanguages gocloc.Languages
-	for _, language := range clocLangs {
-		if len(language.Files) != 0 {
-			sortedLanguages = append(sortedLanguages, *language)
-		}
-	}
-	sort.Sort(sortedLanguages)
-
-	for _, language := range sortedLanguages {
+	for _, language := range o.result.Languages {
 		fmt.Printf("%-27v %6v %14v %14v %14v\n",
 			language.Name, len(language.Files), language.Blanks, language.Comments, language.Code)
 	}
