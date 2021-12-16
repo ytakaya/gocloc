@@ -5,8 +5,6 @@ import (
 	"regexp"
 	"testing"
 	"time"
-
-	"github.com/spf13/afero"
 )
 
 func TestContainsComment(t *testing.T) {
@@ -32,26 +30,6 @@ func TestCheckMD5SumIgnore(t *testing.T) {
 	}
 }
 
-func TestCheckDefaultIgnore(t *testing.T) {
-	appFS := afero.NewMemMapFs()
-	appFS.Mkdir("/test", os.ModeDir)
-	_, _ = appFS.Create("/test/one.go")
-
-	fileInfo, _ := appFS.Stat("/")
-	if !checkDefaultIgnore("/", fileInfo, false) {
-		t.Errorf("invalid logic: this is directory")
-	}
-
-	if !checkDefaultIgnore("/", fileInfo, true) {
-		t.Errorf("invalid logic: this is vcs file or directory")
-	}
-
-	fileInfo, _ = appFS.Stat("/test/one.go")
-	if checkDefaultIgnore("/test/one.go", fileInfo, false) {
-		t.Errorf("invalid logic: should not ignore this file")
-	}
-}
-
 type MockFileInfo struct {
 	FileName    string
 	IsDirectory bool
@@ -71,18 +49,6 @@ func TestCheckOptionMatch(t *testing.T) {
 		t.Errorf("invalid logic: renotmatchdir is nil")
 	}
 
-	opts.ReNotMatchDir = regexp.MustCompile("thisisdir-not-match")
-	fi = MockFileInfo{FileName: "one.go", IsDirectory: false}
-	if !checkOptionMatch("/thisisdir/one.go", fi, opts) {
-		t.Errorf("invalid logic: renotmatchdir is nil")
-	}
-
-	opts.ReNotMatchDir = regexp.MustCompile("thisisdir")
-	fi = MockFileInfo{FileName: "one.go", IsDirectory: false}
-	if checkOptionMatch("/thisisdir/one.go", fi, opts) {
-		t.Errorf("invalid logic: renotmatchdir is ignore")
-	}
-
 	opts = &ClocOptions{}
 	opts.ReMatchDir = regexp.MustCompile("thisisdir")
 	fi = MockFileInfo{FileName: "one.go", IsDirectory: false}
@@ -97,7 +63,6 @@ func TestCheckOptionMatch(t *testing.T) {
 	}
 
 	opts = &ClocOptions{}
-	opts.ReNotMatchDir = regexp.MustCompile("thisisdir-not-match")
 	opts.ReMatchDir = regexp.MustCompile("thisisdir")
 	fi = MockFileInfo{FileName: "one.go", IsDirectory: false}
 	if !checkOptionMatch("/thisisdir/one.go", fi, opts) {

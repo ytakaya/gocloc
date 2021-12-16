@@ -2,7 +2,6 @@ package gocloc
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -21,19 +20,6 @@ type ClocFile struct {
 // ClocFiles is gocloc result set.
 type ClocFiles []ClocFile
 
-func (cf ClocFiles) Len() int {
-	return len(cf)
-}
-func (cf ClocFiles) Swap(i, j int) {
-	cf[i], cf[j] = cf[j], cf[i]
-}
-func (cf ClocFiles) Less(i, j int) bool {
-	if cf[i].Code == cf[j].Code {
-		return cf[i].Name < cf[j].Name
-	}
-	return cf[i].Code > cf[j].Code
-}
-
 // AnalyzeFile is analyzing file, this function calls AnalyzeReader() inside.
 func AnalyzeFile(filename string, language *Language, opts *ClocOptions) *ClocFile {
 	fp, err := os.Open(filename)
@@ -48,10 +34,6 @@ func AnalyzeFile(filename string, language *Language, opts *ClocOptions) *ClocFi
 
 // AnalyzeReader is analyzing file for io.Reader.
 func AnalyzeReader(filename string, language *Language, file io.Reader, opts *ClocOptions) *ClocFile {
-	if opts.Debug {
-		fmt.Printf("filename=%v\n", filename)
-	}
-
 	clocFile := &ClocFile{
 		Name: filename,
 		Lang: language.Name,
@@ -71,13 +53,6 @@ scannerloop:
 
 		if len(strings.TrimSpace(line)) == 0 {
 			onBlank(clocFile, opts, len(inComments) > 0, line, lineOrg)
-			continue
-		}
-
-		// shebang line is 'code'
-		if isFirstLine && strings.HasPrefix(line, "#!") {
-			onCode(clocFile, opts, len(inComments) > 0, line, lineOrg)
-			isFirstLine = false
 			continue
 		}
 
@@ -160,36 +135,12 @@ scannerloop:
 
 func onBlank(clocFile *ClocFile, opts *ClocOptions, isInComments bool, line, lineOrg string) {
 	clocFile.Blanks++
-	if opts.OnBlank != nil {
-		opts.OnBlank(line)
-	}
-
-	if opts.Debug {
-		fmt.Printf("[BLNK, cd:%d, cm:%d, bk:%d, iscm:%v] %s\n",
-			clocFile.Code, clocFile.Comments, clocFile.Blanks, isInComments, lineOrg)
-	}
 }
 
 func onComment(clocFile *ClocFile, opts *ClocOptions, isInComments bool, line, lineOrg string) {
 	clocFile.Comments++
-	if opts.OnComment != nil {
-		opts.OnComment(line)
-	}
-
-	if opts.Debug {
-		fmt.Printf("[COMM, cd:%d, cm:%d, bk:%d, iscm:%v] %s\n",
-			clocFile.Code, clocFile.Comments, clocFile.Blanks, isInComments, lineOrg)
-	}
 }
 
 func onCode(clocFile *ClocFile, opts *ClocOptions, isInComments bool, line, lineOrg string) {
 	clocFile.Code++
-	if opts.OnCode != nil {
-		opts.OnCode(line)
-	}
-
-	if opts.Debug {
-		fmt.Printf("[CODE, cd:%d, cm:%d, bk:%d, iscm:%v] %s\n",
-			clocFile.Code, clocFile.Comments, clocFile.Blanks, isInComments, lineOrg)
-	}
 }
